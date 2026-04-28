@@ -9,12 +9,13 @@ library(officer)
 library(broom)
 library(caret)
 library(scales)
+libreary(dplyr)
 
 # ============================================================
 # Cargar datos
 # ============================================================
 library(readxl)
-datos <- read_excel("~/Documents/Universidad Javeriana/Semestre 4/Analítica de Datos/Casos/Caso 4/DATA.xlsx",
+datos <- read_excel('/Users/maru/Desktop/Javeriana/4/Analitica de los negocios/business-analytics-2026-1/Cases/Predicting _Customer_Churn/DATA.xlsx',
                     sheet = "Case Data",
                     col_names = c(
                       "ID", "Customer_Age", "Churn", "CHI_Month0", "CHI_01",
@@ -63,3 +64,17 @@ tabla_desc <- data.frame(
 )
 
 print(tabla_desc)
+
+# ============================================================
+# Modelo de regresión Logit (Variable binaria)
+# ============================================================
+# Como grupo decidimos usar logit ya que la variable dependiente es binaria (0/1)
+modelo_logit <- glm(churn ~ edad_cliente + chi_mes0 + chi_cambio +
+                     casos_soporte_mes0 + casos_soporte_cambio +
+                     logins_cambio + views_cambio + dias_sin_login_cambio,
+                   data = datos, family = binomial(link = "logit"))
+summary(modelo_logit)
+# R^2 
+r2_mcfadden <- 1 - (logLik(modelo_logit) / logLik(update(modelo_logit, . ~ 1)))
+round(r2_mcfadden, 4)
+
