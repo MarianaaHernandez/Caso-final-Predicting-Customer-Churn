@@ -16,7 +16,7 @@ library(gt)
 # Cargar datos
 # ============================================================
 library(readxl)
-datos <- read_excel('/Users/maru/Desktop/Javeriana/4/Analitica de los negocios/business-analytics-2026-1/Cases/Predicting _Customer_Churn/DATA.xlsx',
+datos <- read_excel("~/Documents/Universidad Javeriana/Semestre 4/Analítica de Datos/Casos/Caso 4/DATA.xlsx",
                     sheet = "Case Data",
                     col_names = c(
                       "ID", "Customer_Age", "Churn", "CHI_Month0", "CHI_01",
