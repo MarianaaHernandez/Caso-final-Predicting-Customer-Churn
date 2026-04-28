@@ -78,3 +78,30 @@ summary(modelo_logit)
 r2_mcfadden <- 1 - (logLik(modelo_logit) / logLik(update(modelo_logit, . ~ 1)))
 round(r2_mcfadden, 4)
 
+# Creacion tabla de coeficientes para exportar a word
+tabla_coef <- tidy(modelo_logit) %>%
+  mutate(
+    Variable = c("Intercepto", "Edad", "CHI 0", "Δ CHI",
+                 "Soporte 0", "Δ Soporte", "Δ Logins",
+                 "Δ Vistas", "Δ Días sin login"),
+    Coef = round(estimate, 4),
+    p = round(p.value, 4)
+  ) %>%
+  select(Variable, Coef, p)
+
+# Tabla bonita 
+ft_modelo <- flextable(tabla_coef) %>%
+  bold(part = "header") %>%
+  autofit()
+
+# Documento Word con los resultados
+doc <- read_docx() %>%
+  body_add_par("Resultados modelo logit", style = "heading 1") %>%
+  body_add_flextable(ft_modelo) %>%
+  body_add_par(
+    paste0("McFadden R² = ", round(r2_mcfadden, 4)),
+    style = "Normal"
+  )
+
+print(doc, target = "Resultados_QWE.docx")
+
