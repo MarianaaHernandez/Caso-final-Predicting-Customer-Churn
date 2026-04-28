@@ -35,3 +35,31 @@ names(datos) <- c(
 
 cat("Dimensiones:", nrow(datos), "filas x", ncol(datos), "columnas\n")
 cat("Clientes que desertaron:", sum(datos$churn), "(", round(mean(datos$churn)*100, 1), "%)\n")
+
+# ============================================================
+# Tabla descriptiva
+# ============================================================
+vars_desc <- c(
+  "edad_cliente", "chi_mes0", "chi_cambio",
+  "casos_soporte_mes0", "casos_soporte_cambio",
+  "logins_cambio", "views_cambio", "dias_sin_login_cambio"
+)
+
+nombres_legibles <- c(
+  "Edad del cliente (meses)", "CHI Score (mes 0)", "Cambio CHI Score",
+  "Casos de soporte (mes 0)", "Cambio casos de soporte",
+  "Cambio en logins", "Cambio en vistas", "Cambio días sin login"
+)
+
+tabla_desc <- data.frame(
+  Variable  = nombres_legibles,
+  N         = sapply(datos[vars_desc], function(x) sum(!is.na(x))),
+  Media     = sapply(datos[vars_desc], function(x) round(mean(x, na.rm = TRUE), 2)),
+  Mediana   = sapply(datos[vars_desc], function(x) round(median(x, na.rm = TRUE), 2)),
+  SD        = sapply(datos[vars_desc], function(x) round(sd(x, na.rm = TRUE), 2)),
+  Minimo    = sapply(datos[vars_desc], function(x) round(min(x, na.rm = TRUE), 2)),
+  Maximo    = sapply(datos[vars_desc], function(x) round(max(x, na.rm = TRUE), 2)),
+  row.names = NULL
+)
+
+print(tabla_desc)
