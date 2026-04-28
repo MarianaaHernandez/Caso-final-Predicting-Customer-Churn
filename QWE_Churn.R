@@ -9,7 +9,8 @@ library(officer)
 library(broom)
 library(caret)
 library(scales)
-libreary(dplyr)
+library(dplyr)
+library(gt)
 
 # ============================================================
 # Cargar datos
@@ -65,6 +66,30 @@ tabla_desc <- data.frame(
 
 print(tabla_desc)
 
+tabla_desc %>%
+  gt() %>%
+  tab_header(
+    title = "Tabla Descriptiva de Variables",
+  ) %>%
+  cols_label(
+    Variable = "Variable",
+    N = "N",
+    Media = "Media",
+    Mediana = "Mediana",
+    SD = "Desv. Estándar",
+    Minimo = "Mín",
+    Maximo = "Máx"
+  ) %>%
+  fmt_number(
+    columns = c(Media, Mediana, SD, Minimo, Maximo),
+    decimals = 2
+  ) %>%
+  cols_align(
+    align = "center",
+    -Variable
+  )
+
+
 # ============================================================
 # Modelo de regresión Logit (Variable binaria)
 # ============================================================
@@ -89,7 +114,6 @@ tabla_coef <- tidy(modelo_logit) %>%
   ) %>%
   select(Variable, Coef, p)
 
-# Tabla bonita 
 ft_modelo <- flextable(tabla_coef) %>%
   bold(part = "header") %>%
   autofit()
