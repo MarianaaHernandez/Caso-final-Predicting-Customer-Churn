@@ -105,3 +105,75 @@ doc <- read_docx() %>%
 
 print(doc, target = "Resultados_QWE.docx")
 
+# ============================================================
+# Matriz de Confusión
+# ============================================================
+datos$prob_predicha <- predict(modelo, type = "response")
+
+# Calcular umbral óptimo (Youden: maximiza sensibilidad + especificidad)
+# Necesario porque solo el 5% deserta, con 0.5 el modelo predice siempre "no deserta"
+umbrales <- seq(0.03, 0.4, by = 0.005)
+resultados_umbral <- data.frame(umbral = umbrales, youden = NA)
+for (i in seq_along(umbrales)) {
+  u <- umbrales[i]
+  pred_tmp <- ifelse(datos$prob_predicha >= u, 1, 0)
+  tp <- sum(pred_tmp == 1 & datos$churn == 1)
+  fp <- sum(pred_tmp == 1 & datos$churn == 0)
+  tn <- sum(pred_tmp == 0 & datos$churn == 0)
+  fn <- sum(pred_tmp == 0 & datos$churn == 1)
+  sens <- if ((tp + fn) > 0) tp / (tp + fn) else 0
+  spec <- if ((tn + fp) > 0) tn / (tn + fp) else 0
+  resultados_umbral$youden[i] <- sens + spec - 1
+}
+umbral_optimo <- resultados_umbral$umbral[which.max(resultados_umbral$youden)]
+cat("\nUmbral óptimo (Youden):", umbral_optimo, "\n")
+
+datos$churn_predicho <- ifelse(datos$prob_predicha >= umbral_optimo, 1, 0)
+
+# Calcular métricas
+conf_mat <- confusionMatrix(
+  factor(datos$churn_predicho, levels = c(0, 1)),
+  factor(datos$churn,          levels = c(0, 1)),
+  positive = "1"
+)
+cat("\nMétricas del modelo:\n")
+print(conf_mat)
+
+conf_df <- as.data.frame(conf_mat$table)
+conf_df$Etiqueta <- paste0(conf_df$Freq)
+conf_df$Pct <- paste0(round(conf_df$Freq / sum(conf_df$Freq) * 100, 1), "%")
+
+conf_df <- conf_df %>%
+  mutate(
+    Prediccion_label = ifelse(Prediction == "1", "Predicho: Deserta", "Predicho: No Deserta"),
+    Real_label       = ifelse(Reference   == "1", "Real: Deserta",     "Real: No Deserta")
+  )
+
+grafico_conf <- ggplot(conf_df, aes(x = Prediccion_label, y = Real_label, fill = Freq)) +
+  geom_tile(color = "white", linewidth = 1.5) +
+  geom_text(aes(label = paste0(Freq, "\n(", Pct, ")")),
+            size = 7, fontface = "bold", color = "white") +
+  scale_fill_gradient(low = "#3498db", high = "#1a5276",
+                      name = "Frecuencia") +
+  labs(
+    title    = "Matriz de Confusión - Modelo Logit",
+    subtitle = paste0("Umbral de clasificación: 0.5  |  Exactitud: ",
+                      round(conf_mat$overall["Accuracy"] * 100, 1), "%"),
+    x = "Valor Predicho",
+    y = "Valor Real"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 16, hjust = 0.5),
+    plot.subtitle = element_text(size = 12, hjust = 0.5, color = "gray40"),
+    axis.title    = element_text(face = "bold", size = 13),
+    axis.text     = element_text(size = 12),
+    legend.position = "right",
+    panel.grid    = element_blank()
+  )
+
+grafico_conf
+ggsave("matriz_confusion_QWE.png", grafico_conf, width = 8, height = 6, dpi = 150)
+cat("Gráfico guardado: matriz_confusion_QWE.png\n")
+
+
