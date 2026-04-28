@@ -102,31 +102,78 @@ summary(modelo_logit)
 r2_mcfadden <- 1 - (logLik(modelo_logit) / logLik(update(modelo_logit, . ~ 1)))
 round(r2_mcfadden, 4)
 
-# Creacion tabla de coeficientes para exportar a word
+# ── Exportar tabla a Word ────────────────────────────────────
+nombres_vars <- c(
+  "Intercepto", "Edad del cliente (meses)", "CHI Score (mes 0)",
+  "Cambio CHI Score", "Casos de soporte (mes 0)", "Cambio casos de soporte",
+  "Cambio en logins", "Cambio en vistas", "Cambio días sin login"
+)
+
 tabla_coef <- tidy(modelo_logit) %>%
   mutate(
-    Variable = c("Intercepto", "Edad", "CHI 0", "Δ CHI",
-                 "Soporte 0", "Δ Soporte", "Δ Logins",
-                 "Δ Vistas", "Δ Días sin login"),
-    Coef = round(estimate, 4),
-    p = round(p.value, 4)
+    Variable      = nombres_vars,
+    Coeficiente   = round(estimate, 4),
+    Error_Std     = round(std.error, 4),
+    Estadistico_Z = round(statistic, 2),
+    p_value       = round(p.value, 4),
+    Significancia = case_when(
+      p.value < 0.001 ~ "***",
+      p.value < 0.01  ~ "**",
+      p.value < 0.05  ~ "*",
+      p.value < 0.1   ~ ".",
+      TRUE            ~ ""
+    )
   ) %>%
-  select(Variable, Coef, p)
+  select(Variable, Coeficiente, Error_Std, Estadistico_Z, p_value, Significancia)
 
+# Crear tabla bonita con flextable
 ft_modelo <- flextable(tabla_coef) %>%
+  set_header_labels(
+    Variable      = "Variable",
+    Coeficiente   = "Coeficiente",
+    Error_Std     = "Error Estándar",
+    Estadistico_Z = "Estadístico Z",
+    p_value       = "p-value",
+    Significancia = "Sig."
+  ) %>%
+  add_footer_lines(
+    paste0("Nota: *** p<0.001  ** p<0.01  * p<0.05  . p<0.1\n",
+           "McFadden R² = ", r2_mcfadden,
+           "   |   N = ", nrow(datos))
+  ) %>%
+  theme_booktabs() %>%
   bold(part = "header") %>%
   autofit()
 
-# Documento Word con los resultados
+# Crear tabla descriptiva para Word
+ft_desc <- flextable(tabla_desc) %>%
+  set_header_labels(
+    Variable = "Variable", N = "N", Media = "Media", Mediana = "Mediana",
+    SD = "Desv. Estándar", Minimo = "Mínimo", Maximo = "Máximo"
+  ) %>%
+  theme_booktabs() %>%
+  bold(part = "header") %>%
+  autofit()
+
+# Armar documento Word
 doc <- read_docx() %>%
-  body_add_par("Resultados modelo logit", style = "heading 1") %>%
+  body_add_par("Análisis de Deserción de Clientes - QWE INC.", style = "heading 1") %>%
+  body_add_par("") %>%
+  body_add_par("1. Estadísticas Descriptivas", style = "heading 2") %>%
+  body_add_flextable(ft_desc) %>%
+  body_add_par("") %>%
+  body_add_par("2. Modelo Logit - Variable Dependiente: Churn", style = "heading 2") %>%
   body_add_flextable(ft_modelo) %>%
+  body_add_par("") %>%
   body_add_par(
-    paste0("McFadden R² = ", round(r2_mcfadden, 4)),
+    paste0("Interpretación: El McFadden R² = ", r2_mcfadden,
+           " indica que el modelo explica aproximadamente el ",
+           round(r2_mcfadden * 100, 1), "% de la variación en la deserción."),
     style = "Normal"
   )
 
 print(doc, target = "Resultados_QWE.docx")
+cat("Tabla exportada a: Resultados_QWE.docx\n")
 
 # ============================================================
 # Matriz de Confusión
