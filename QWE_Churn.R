@@ -181,7 +181,6 @@ cat("Tabla exportada a: Resultados_QWE.docx\n")
 datos$prob_predicha <- predict(modelo, type = "response")
 
 # Calcular umbral óptimo (Youden: maximiza sensibilidad + especificidad)
-# Necesario porque solo el 5% deserta, con 0.5 el modelo predice siempre "no deserta"
 umbrales <- seq(0.03, 0.4, by = 0.005)
 resultados_umbral <- data.frame(umbral = umbrales, youden = NA)
 for (i in seq_along(umbrales)) {
@@ -227,7 +226,7 @@ grafico_conf <- ggplot(conf_df, aes(x = Prediccion_label, y = Real_label, fill =
                       name = "Frecuencia") +
   labs(
     title    = "Matriz de Confusión - Modelo Logit",
-    subtitle = paste0("Umbral de clasificación: 0.5  |  Exactitud: ",
+    subtitle = paste0("Umbral de Youden |  Exactitud: ",
                       round(conf_mat$overall["Accuracy"] * 100, 1), "%"),
     x = "Valor Predicho",
     y = "Valor Real"
