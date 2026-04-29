@@ -159,10 +159,10 @@ ft_desc <- flextable(tabla_desc) %>%
 doc <- read_docx() %>%
   body_add_par("Análisis de Deserción de Clientes - QWE INC.", style = "heading 1") %>%
   body_add_par("") %>%
-  body_add_par("Tabla 1. Estadísticas Descriptivas", style = "heading 2") %>%
+  body_add_par("1. Estadísticas Descriptivas", style = "heading 2") %>%
   body_add_flextable(ft_desc) %>%
   body_add_par("") %>%
-  body_add_par("Tabla 2. Modelo Logit - Variable Dependiente: Churn", style = "heading 2") %>%
+  body_add_par("2. Modelo Logit - Variable Dependiente: Churn", style = "heading 2") %>%
   body_add_flextable(ft_modelo) %>%
   body_add_par("") %>%
   body_add_par(
@@ -244,5 +244,3 @@ grafico_conf <- ggplot(conf_df, aes(x = Prediccion_label, y = Real_label, fill =
 grafico_conf
 ggsave("matriz_confusion_QWE.png", grafico_conf, width = 8, height = 6, dpi = 150)
 cat("Gráfico guardado: matriz_confusion_QWE.png\n")
-
-
