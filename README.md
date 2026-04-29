@@ -7,5 +7,5 @@ Este proyecto tiene como objetivo analizar y predecir la deserción de clientes 
 
 ## Objetivo
 Identificar los factores que influyen en la deserción de clientes.
-Estimar un modelo de probabilidad (Logit/Probit/MPL).
+Estimar un modelo de probabilidad (Logit).
 Evaluar el desempeño del modelo predictivo.
