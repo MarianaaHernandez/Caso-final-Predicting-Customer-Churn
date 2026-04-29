@@ -290,3 +290,53 @@ grafico_errores
 ggsave("grafico_errores_QWE.png", grafico_errores, width = 10, height = 6, dpi = 150)
 cat("Gráfico guardado: grafico_errores_QWE.png\n")
 
+# ============================================================
+# Gráfico: Probabilidades Predichas vs Valores Reales
+# ============================================================
+datos_plot <- datos %>%
+  mutate(Churn_Real = ifelse(churn == 1, "Desertó", "No Desertó"))
+
+# Densidad de probabilidades predichas por grupo
+grafico_pred_vs_real <- ggplot(datos_plot, aes(x = prob_predicha, fill = Churn_Real)) +
+  geom_density(alpha = 0.6, linewidth = 0.8) +
+  geom_vline(xintercept = 0.5, color = "black",
+             linetype = "dashed", linewidth = 1) +
+  annotate("text", x = 0.52, y = Inf, label = "Umbral = 0.5",
+           hjust = 0, vjust = 1.5, size = 4, color = "gray30") +
+  scale_fill_manual(
+    values = c("Desertó" = "#e74c3c", "No Desertó" = "#3498db"),
+    name   = "Churn Real"
+  ) +
+  scale_x_continuous(
+    labels = label_percent(accuracy = 1),
+    limits = c(0, 1),
+    breaks = seq(0, 1, 0.1)
+  ) +
+  labs(
+    title    = "Probabilidades Predichas vs Valores Reales",
+    subtitle = "Distribución de la probabilidad estimada de deserción por grupo",
+    x        = "Probabilidad Predicha de Deserción",
+    y        = "Densidad",
+    caption  = "Un buen modelo separa claramente las distribuciones de los dos grupos"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 16, hjust = 0.5),
+    plot.subtitle = element_text(size = 12, hjust = 0.5, color = "gray40"),
+    plot.caption  = element_text(size = 10, color = "gray50", hjust = 0),
+    axis.title    = element_text(face = "bold", size = 13),
+    legend.position = "top",
+    legend.title  = element_text(face = "bold")
+  )
+
+grafico_pred_vs_real
+ggsave("predicho_vs_real_QWE.png", grafico_pred_vs_real, width = 10, height = 6, dpi = 150)
+cat("Gráfico guardado: predicho_vs_real_QWE.png\n")
+
+cat("\n=== Script completado ===\n")
+cat("Archivos generados:\n")
+cat("  - Resultados_QWE.docx   (tablas exportadas a Word)\n")
+cat("  - matriz_confusion_QWE.png\n")
+cat("  - grafico_errores_QWE.png\n")
+cat("  - predicho_vs_real_QWE.png\n")
+
