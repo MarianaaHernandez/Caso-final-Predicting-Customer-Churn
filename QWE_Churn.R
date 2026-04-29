@@ -16,7 +16,10 @@ library(gt)
 # Cargar datos
 # ============================================================
 library(readxl)
-datos <- read_excel("~/Documents/Universidad Javeriana/Semestre 4/Analítica de Datos/Casos/Caso 4/DATA.xlsx",
+
+setwd("/Users/juanestebandaza/Desktop/GitHub/Caso-final-Predicting-Customer-Churn")
+
+datos <- read_excel("DATA.xlsx",
                     sheet = "Case Data",
                     col_names = c(
                       "ID", "Customer_Age", "Churn", "CHI_Month0", "CHI_01",
@@ -178,7 +181,7 @@ cat("Tabla exportada a: Resultados_QWE.docx\n")
 # ============================================================
 # Matriz de Confusión
 # ============================================================
-datos$prob_predicha <- predict(modelo, type = "response")
+datos$prob_predicha <- predict(modelo_logit, type = "response")
 
 # Calcular umbral óptimo (Youden: maximiza sensibilidad + especificidad)
 umbrales <- seq(0.03, 0.4, by = 0.005)
@@ -244,3 +247,46 @@ grafico_conf <- ggplot(conf_df, aes(x = Prediccion_label, y = Real_label, fill =
 grafico_conf
 ggsave("matriz_confusion_QWE.png", grafico_conf, width = 8, height = 6, dpi = 150)
 cat("Gráfico guardado: matriz_confusion_QWE.png\n")
+
+
+
+# ============================================================
+# Gráfico de Errores
+# ============================================================
+datos$residuo <- datos$churn - datos$prob_predicha
+
+# Histograma de residuos
+grafico_errores <- ggplot(datos, aes(x = residuo)) +
+  geom_histogram(aes(fill = after_stat(x > 0)),
+                 bins = 50, color = "white", linewidth = 0.3) +
+  scale_fill_manual(
+    values = c("TRUE" = "#2ecc71", "FALSE" = "#e74c3c"),
+    labels = c("TRUE" = "Subestimado (predijo <0.5, era 1)",
+               "FALSE" = "Sobreestimado (predijo >0.5, era 0)"),
+    name = "Tipo de error"
+  ) +
+  geom_vline(xintercept = 0, color = "black", linetype = "dashed", linewidth = 1) +
+  scale_x_continuous(
+    breaks = seq(-1, 1, 0.25),
+    labels = label_number(accuracy = 0.01)
+  ) +
+  labs(
+    title    = "Distribución de Errores del Modelo Logit",
+    subtitle = "Residuo = Valor Real - Probabilidad Predicha",
+    x        = "Residuo",
+    y        = "Número de clientes",
+    caption  = "Valores negativos: modelo sobreestimó la probabilidad de deserción\nValores positivos: modelo subestimó la probabilidad de deserción"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 16, hjust = 0.5),
+    plot.subtitle = element_text(size = 12, hjust = 0.5, color = "gray40"),
+    plot.caption  = element_text(size = 10, color = "gray50", hjust = 0),
+    axis.title    = element_text(face = "bold", size = 13),
+    legend.position = "bottom"
+  )
+
+grafico_errores
+ggsave("grafico_errores_QWE.png", grafico_errores, width = 10, height = 6, dpi = 150)
+cat("Gráfico guardado: grafico_errores_QWE.png\n")
+
